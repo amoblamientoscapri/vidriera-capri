@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Render Vidriera — Amoblamientos Capri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@700;900&family=Montserrat:wght@500;600;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --green:#2f6b4f; --green-d:#1f4a36; --cream:#f3ead7; --cream-d:#e4d7bb; --ink:#1c2620; --muted:#5c6b62; --line:#d8d0bd; --hero:#c8852b; --scale:1.7; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Montserrat',sans-serif;color:var(--ink);background:#eceae3;line-height:1.4}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 14px 80px}
+  header.top{background:linear-gradient(135deg,var(--green),var(--green-d));color:#fff;padding:24px 0}
+  header.top .wrap{padding-bottom:0}
+  h1{font-size:25px;font-weight:800}
+  header.top p{opacity:.92;margin-top:5px;font-size:14px;max-width:780px}
+  .counter{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+  .counter span{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);padding:4px 10px;border-radius:7px;font-size:12px;font-weight:700}
+  .nav{position:sticky;top:0;z-index:20;background:rgba(236,234,227,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:9px 0;margin-bottom:14px}
+  .nav .wrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-bottom:0}
+  .nav a,.nav button{font-family:inherit;font-weight:700;font-size:13px;color:var(--green-d);text-decoration:none;background:#fff;border:1px solid var(--line);padding:6px 12px;border-radius:8px;cursor:pointer}
+  .nav a:hover,.nav button:hover{background:var(--cream)}
+  .nav .sp{flex:1}
+  h2{font-size:20px;color:var(--green-d);margin:26px 0 4px;display:flex;align-items:center;gap:9px}
+  h2 .n{background:var(--green);color:#fff;width:26px;height:26px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-size:14px}
+  .lead{color:var(--muted);font-size:14px;margin-bottom:14px;max-width:840px}
+  /* ===== MAQUETA ===== */
+  .facade{margin-bottom:30px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .facade h3{font-size:17px;color:var(--green-d);margin-bottom:2px}
+  .facade .sub{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+  .cols{display:flex;gap:7px;align-items:flex-end;overflow-x:auto;padding-bottom:6px}
+  .col{display:flex;flex-direction:column;gap:6px}
+  .pane{position:relative;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px;border:2px solid transparent;box-shadow:0 2px 5px rgba(0,0,0,.12)}
+  .pane.verde{background:var(--green);color:#fff;border-color:var(--green-d)}
+  .pane.crema{background:var(--cream);color:var(--green-d);border-color:var(--cream-d)}
+  .pane.door{background:repeating-linear-gradient(160deg,#27583f 0 14px,#224f38 14px 28px);color:#fff;border-color:#163828}
+  .pane.glass{background:linear-gradient(150deg,#dfeee6,#cfe4d8);color:#234;border:2px dashed #7ba892}
+  .pane .pid{position:absolute;top:3px;right:5px;font-size:8.5px;opacity:.55;font-weight:700;font-family:'Oswald'}
+  .pane .dim{position:absolute;top:3px;left:5px;font-size:8px;opacity:.5;font-family:'Oswald'}
+  .pane .qualifier{font-family:'Oswald';font-weight:700;letter-spacing:.06em;line-height:1;margin-bottom:1px}
+  .pane .hero{font-family:'Barlow Condensed';font-weight:900;line-height:.92}
+  .pane .hero.txt{font-family:'Oswald';font-weight:700;letter-spacing:.04em}
+  .pane .hero.brand{font-family:'Anton';font-weight:400;letter-spacing:.03em}
+  .pane .sub{font-family:'Montserrat';font-weight:600;line-height:1.05;margin-top:2px}
+  .pane .body{font-family:'Montserrat';font-weight:500;line-height:1.1;margin-top:2px;opacity:.92}
+  .pane .cta{font-family:'Oswald';font-weight:700;line-height:1.05}
+  .qr{background:#fff;border:1px solid #bbb;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#111;font-family:'Oswald';font-weight:700;margin-top:4px;position:relative}
+  .qr::before{content:"";position:absolute;inset:8%;background:
+     linear-gradient(90deg,#000 0 12%,#fff 0 20%,#000 0 30%,#fff 0 44%,#000 0 56%,#fff 0 70%,#000 0 82%,#fff 0 100%),
+     linear-gradient(0deg,#000 0 12%,#fff 0 20%,#000 0 30%,#fff 0 44%,#000 0 56%,#fff 0 70%,#000 0 82%,#fff 0 100%);
+     background-blend-mode:multiply;opacity:.85}
+  .qr span{position:relative;z-index:2;background:#fff;padding:0 3px;font-size:9px}
+  .mueble{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;opacity:.32;pointer-events:none}
+  .person{width:calc(170px * var(--scale) / 3.2);align-self:flex-end;font-size:11px;color:var(--muted);text-align:center;margin-left:6px}
+  .rowtag{font-family:'Oswald';font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:6px 2px 2px}
+  /* ===== TIRA LINEAL ===== */
+  .strip-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto}
+  .strip{display:grid;grid-auto-flow:column;gap:6px;min-width:max-content}
+  .scell{width:118px;border-radius:7px;padding:7px;color:#fff;position:relative;display:flex;flex-direction:column;font-size:11px;border:2px solid transparent}
+  .scell.verde{background:var(--green);border-color:var(--green-d)}
+  .scell.crema{background:var(--cream);color:var(--green-d);border-color:var(--cream-d)}
+  .scell.door{background:repeating-linear-gradient(160deg,#27583f 0 10px,#224f38 10px 20px);border-color:#163828}
+  .scell.glass{background:linear-gradient(150deg,#dfeee6,#cfe4d8);color:#234;border:2px dashed #7ba892}
+  .scell .ord{font-family:'Anton';font-size:18px;line-height:1}
+  .scell .sid{font-family:'Oswald';font-weight:700;font-size:10px;opacity:.7}
+  .scell .scont{margin-top:4px;font-weight:600;line-height:1.15}
+  .scell .smeas{margin-top:auto;font-size:9.5px;opacity:.6;font-family:'Oswald';padding-top:4px}
+  .scell .flags{position:absolute;top:5px;right:6px;font-size:12px}
+  .strip-row-label{font-family:'Oswald';font-weight:700;font-size:12px;color:var(--green-d);text-transform:uppercase;letter-spacing:.06em;margin:10px 2px 5px}
+  .bands{display:grid;grid-auto-flow:column;gap:6px;min-width:max-content;margin-top:6px}
+  .band{text-align:center;color:#fff;font-family:'Oswald';font-weight:700;font-size:11px;padding:5px;border-radius:6px;text-transform:uppercase;letter-spacing:.05em}
+  /* legend */
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 14px}
+  .legend b{color:var(--ink)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:15px;height:15px;border-radius:4px;display:inline-block}
+  .hidden{display:none}
+  footer{margin-top:46px;color:var(--muted);font-size:12px;text-align:center}
+  .tip{font-size:12px;color:var(--muted);margin:4px 2px 0}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>🪟 Render de la Vidriera — Amoblamientos Capri</h1>
+    <p>Dos vistas: <b>Maqueta</b> (cómo va a quedar, a escala real) y <b>Tira lineal</b> (la ubicación de cada vinilo de un vistazo). Mismos datos que la página técnica.</p>
+    <div class="counter" id="counter"></div>
+  </div>
+</header>
+
+<div class="nav"><div class="wrap">
+  <button onclick="show('maqueta')" id="b-maqueta">🏠 Maqueta</button>
+  <button onclick="show('tira')" id="b-tira">📋 Tira lineal</button>
+  <button onclick="show('both')" id="b-both">Ver las dos</button>
+  <span class="sp"></span>
+  <a href="index.html">📐 Ficha técnica por paño →</a>
+</div></div>
+
+<div class="wrap">
+
+  <section id="maqueta">
+    <h2><span class="n">A</span> Maqueta — cómo va a quedar</h2>
+    <p class="lead">Cada columna es un vidrio real (banderola arriba + ventana abajo). Tamaños a escala. Los paños <b>punteados verdes</b> dejan ver el mueble; los <b>verdes/crema</b> son vinilo; las <b>puertas</b> rayadas son los accesos.</p>
+    <div id="maqueta-body"></div>
+    <div class="legend">
+      <b>Qué es cada vidrio:</b>
+      <span><span class="sw" style="background:var(--green)"></span> Verde opaco</span>
+      <span><span class="sw" style="background:var(--cream);border:1px solid var(--cream-d)"></span> Crema opaco</span>
+      <span><span class="sw" style="background:linear-gradient(150deg,#dfeee6,#cfe4d8);border:2px dashed #7ba892"></span> Deja ver el mueble + QR</span>
+      <span><span class="sw" style="background:repeating-linear-gradient(160deg,#27583f 0 6px,#224f38 6px 12px)"></span> Puerta</span>
+    </div>
+  </section>
+
+  <section id="tira">
+    <h2><span class="n">B</span> Tira lineal — ubicación de cada vinilo</h2>
+    <p class="lead">Los 24 paños desplegados en el orden en que se recorre el local (doblando la esquina): <b>Lateral → Ochava → Frente 1 → Frente 2</b>. Arriba las 12 banderolas; abajo las 12 ventanas, alineadas con su columna.</p>
+    <div class="strip-wrap">
+      <div class="strip-row-label">▲ Arriba — Banderolas (1–12)</div>
+      <div class="strip" id="strip-arriba"></div>
+      <div class="strip-row-label">▼ Abajo — Ventanas (13–24)</div>
+      <div class="strip" id="strip-abajo"></div>
+      <div class="bands" id="bands"></div>
+    </div>
+    <p class="tip">💡 El color del borde de abajo agrupa por fachada. El color de relleno = tipo de vinilo (igual que en la maqueta).</p>
+  </section>
+
+</div>
+
+<footer>Render generado para Amoblamientos Capri · Tipografías: Barlow Condensed (números) · Oswald (títulos) · Anton (CAPRI) · Montserrat (texto).</footer>
+
+<script src="data.js"></script>
+<script>
+const S = 1.7; // px por cm (maqueta)
+const px = cm => cm*S;
+const FAC = {LATERAL:{name:'▮ LATERAL (calle lateral)',sub:'Cara secundaria: marca + categorías.',band:'#3b6ea5'},
+             OCHAVA:{name:'◢ OCHAVA (la esquina)',sub:'Billboard para los autos — máxima visibilidad.',band:'#a5683b'},
+             FRENTE1:{name:'▢ FRENTE 1',sub:'Display secundario del frente.',band:'#4f9b6a'},
+             FRENTE2:{name:'▣ FRENTE 2 (principal)',sub:'Display principal + puerta de entrada.',band:'#8b5ca5'}};
+const FAC_ORDER=['LATERAL','OCHAVA','FRENTE1','FRENTE2'];
+const MUEBLE={'O1-ABAJO':'🪑','O3-ABAJO':'📺','F2a-ABAJO':'🪑','F2d-ABAJO':'🛏️','F1a-ABAJO':'🪑','F1b-ABAJO':'🧺','L1-ABAJO':'🪑','L2-ABAJO':'🛏️','L3-ABAJO':'🛏️'};
+
+function elHTML(e){
+  const fs = px(e.cm);
+  if(e.role==='qr'){
+    const s=px(40);
+    return `<div class="qr" style="width:${s}px;height:${s}px"><span>QR 40×40</span></div>`;
+  }
+  const cls = e.role==='hero' ? ('hero'+(e.font==='anton'?' brand':e.font==='oswald'?' txt':'')) : e.role;
+  const lines = e.lines.map(l=>`<div>${l}</div>`).join('');
+  return `<div class="${cls}" style="font-size:${fs}px">${lines}</div>`;
+}
+function paneHTML(p){
+  const w=px(p.ancho), h=px(p.alto);
+  const mueble = p.tipo==='glass' && MUEBLE[p.id] ? `<div class="mueble">${MUEBLE[p.id]}</div>` : '';
+  const els = p.elements.map(elHTML).join('');
+  return `<div class="pane ${p.tipo}" style="width:${w}px;height:${h}px" title="${p.id} · ${p.ancho}×${p.alto}cm">
+    ${mueble}<span class="dim">${p.ancho}×${p.alto}</span><span class="pid">${p.id.split('-')[0]}</span>
+    <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center">${els}</div></div>`;
+}
+
+// ---- MAQUETA ----
+let mh='';
+for(const fk of FAC_ORDER){
+  const f=FAC[fk];
+  const cols=[...new Set(PANOS.filter(p=>p.fachada===fk).map(p=>p.col))]
+            .sort((a,b)=>PANOS.find(p=>p.col===a).orden-PANOS.find(p=>p.col===b).orden);
+  let colsHTML='';
+  for(const c of cols){
+    const arr=PANOS.find(p=>p.col===c&&p.pos==='ARRIBA');
+    const aba=PANOS.find(p=>p.col===c&&p.pos==='ABAJO');
+    colsHTML+=`<div class="col">${arr?paneHTML(arr):''}${aba?paneHTML(aba):''}</div>`;
+  }
+  mh+=`<div class="facade"><h3>${f.name}</h3><div class="sub">${f.sub}</div>
+       <div class="cols">${colsHTML}<div class="person">🧍<br>≈1,70 m</div></div></div>`;
+}
+document.getElementById('maqueta-body').innerHTML=mh;
+
+// ---- TIRA ----
+function scell(p){
+  const cont=p.elements.filter(e=>e.role!=='qr').map(e=>e.lines.join(' ')).join(' · ');
+  const flags=(p.hasQR?'▦':'')+(p.tipo==='glass'?'🪟':'')+(p.tipo==='door'?'🚪':'');
+  return `<div class="scell ${p.tipo}" title="${p.id}">
+    <span class="flags">${flags}</span>
+    <div class="ord">${String(p.orden + (p.pos==='ABAJO'?12:0)).padStart(2,'0')}</div>
+    <div class="sid">${p.id}</div>
+    <div class="scont">${cont}</div>
+    <div class="smeas">${p.ancho}×${p.alto} cm</div></div>`;
+}
+const ordered = FAC_ORDER.flatMap(fk=>[...new Set(PANOS.filter(p=>p.fachada===fk).map(p=>p.col))]
+                 .sort((a,b)=>PANOS.find(p=>p.col===a).orden-PANOS.find(p=>p.col===b).orden));
+document.getElementById('strip-arriba').innerHTML = ordered.map(c=>scell(PANOS.find(p=>p.col===c&&p.pos==='ARRIBA'))).join('');
+document.getElementById('strip-abajo').innerHTML  = ordered.map(c=>scell(PANOS.find(p=>p.col===c&&p.pos==='ABAJO'))).join('');
+// bands
+let bandsHTML='';
+for(const fk of FAC_ORDER){
+  const n=[...new Set(PANOS.filter(p=>p.fachada===fk).map(p=>p.col))].length;
+  bandsHTML+=`<div class="band" style="background:${FAC[fk].band};grid-column:span ${n}">${fk}</div>`;
+}
+document.getElementById('bands').innerHTML=bandsHTML;
+document.getElementById('bands').style.gridTemplateColumns=`repeat(${ordered.length},118px)`;
+
+// counter
+const qr=PANOS.filter(p=>p.hasQR).length, glass=PANOS.filter(p=>p.tipo==='glass').length;
+document.getElementById('counter').innerHTML =
+ `<span>24 paños</span><span>12 banderolas · 12 ventanas</span><span>${qr} con QR</span><span>${glass} dejan ver mueble</span>`;
+
+// toggle
+function show(v){
+  document.getElementById('maqueta').classList.toggle('hidden', v==='tira');
+  document.getElementById('tira').classList.toggle('hidden', v==='maqueta');
+  for(const b of ['maqueta','tira','both']) document.getElementById('b-'+b).style.background = b===v?'var(--cream)':'#fff';
+}
+show('both');
+</script>
+</body>
+</html>

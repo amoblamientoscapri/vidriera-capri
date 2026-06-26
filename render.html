@@ -59,8 +59,9 @@
   .rowtag{font-family:'Oswald';font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:6px 2px 2px}
   /* ===== TIRA LINEAL ===== */
   .strip-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto}
-  .strip{display:grid;grid-auto-flow:column;gap:6px;min-width:max-content}
-  .scell{width:118px;border-radius:7px;padding:7px;color:#fff;position:relative;display:flex;flex-direction:column;font-size:11px;border:2px solid transparent}
+  .strip{display:grid;gap:6px;width:max-content}
+  #strip-arriba{align-items:end} #strip-abajo{align-items:start}
+  .scell{border-radius:7px;padding:7px 6px;color:#fff;position:relative;display:flex;flex-direction:column;font-size:11.5px;border:2px solid transparent;overflow:hidden}
   .scell.verde{background:var(--green);border-color:var(--green-d)}
   .scell.crema{background:var(--cream);color:var(--green-d);border-color:var(--cream-d)}
   .scell.door{background:linear-gradient(150deg,#e7f1eb,#d7e8de);color:#234;border:2px dashed #6f9e86}
@@ -97,8 +98,10 @@
   <button onclick="show('maqueta')" id="b-maqueta">🏠 Maqueta</button>
   <button onclick="show('tira')" id="b-tira">📋 Tira lineal</button>
   <button onclick="show('both')" id="b-both">Ver las dos</button>
+  <button onclick="downloadSVG()" style="background:var(--green);color:#fff">⬇️ SVG escala real (1:1)</button>
   <span class="sp"></span>
-  <a href="index.html">📐 Ficha técnica por paño →</a>
+  <a href="index.html">📐 Ficha técnica →</a>
+  <a href="ejemplo1-render.html">Ejemplo 1 (viejo)</a>
 </div></div>
 
 <div class="wrap">
@@ -180,11 +183,14 @@ for(const fk of FAC_ORDER){
 }
 document.getElementById('maqueta-body').innerHTML=mh;
 
-// ---- TIRA ----
+// ---- TIRA (proporcional, mismas proporciones que la maqueta) ----
+const SC2 = 1.55; // px por cm en la tira
+const colW = c => { const a=PANOS.find(p=>p.col===c&&p.pos==='ARRIBA'), b=PANOS.find(p=>p.col===c&&p.pos==='ABAJO'); return Math.round(Math.max(a?a.ancho:0,b?b.ancho:0)*SC2); };
 function scell(p){
-  const cont=p.elements.filter(e=>e.role!=='qr').map(e=>e.lines.join(' ')).join(' · ');
+  const w=colW(p.col), h=Math.round(p.alto*SC2);
+  const cont=p.elements.filter(e=>e.role!=='qr').map(e=>e.lines.join(' ')).join(' · ')+(p.hasQR?' · [QR]':'');
   const flags=(p.hasQR?'▦':'')+(p.tipo==='glass'?'🪟':'')+(p.tipo==='door'?'🚪':'');
-  return `<div class="scell ${p.tipo}" title="${p.id}">
+  return `<div class="scell ${p.tipo}" title="${p.id} · ${p.ancho}×${p.alto}cm" style="width:${w}px;height:${h}px">
     <span class="flags">${flags}</span>
     <div class="ord">${String(p.orden + (p.pos==='ABAJO'?12:0)).padStart(2,'0')}</div>
     <div class="sid">${p.id}</div>
@@ -193,16 +199,72 @@ function scell(p){
 }
 const ordered = FAC_ORDER.flatMap(fk=>[...new Set(PANOS.filter(p=>p.fachada===fk).map(p=>p.col))]
                  .sort((a,b)=>PANOS.find(p=>p.col===a).orden-PANOS.find(p=>p.col===b).orden));
-document.getElementById('strip-arriba').innerHTML = ordered.map(c=>scell(PANOS.find(p=>p.col===c&&p.pos==='ARRIBA'))).join('');
-document.getElementById('strip-abajo').innerHTML  = ordered.map(c=>scell(PANOS.find(p=>p.col===c&&p.pos==='ABAJO'))).join('');
+const tmpl = ordered.map(c=>colW(c)+'px').join(' ');
+const sa=document.getElementById('strip-arriba'), sb=document.getElementById('strip-abajo');
+sa.style.gridTemplateColumns=tmpl; sb.style.gridTemplateColumns=tmpl;
+sa.innerHTML = ordered.map(c=>scell(PANOS.find(p=>p.col===c&&p.pos==='ARRIBA'))).join('');
+sb.innerHTML = ordered.map(c=>scell(PANOS.find(p=>p.col===c&&p.pos==='ABAJO'))).join('');
 // bands
 let bandsHTML='';
 for(const fk of FAC_ORDER){
   const n=[...new Set(PANOS.filter(p=>p.fachada===fk).map(p=>p.col))].length;
   bandsHTML+=`<div class="band" style="background:${FAC[fk].band};grid-column:span ${n}">${fk}</div>`;
 }
-document.getElementById('bands').innerHTML=bandsHTML;
-document.getElementById('bands').style.gridTemplateColumns=`repeat(${ordered.length},118px)`;
+const bd=document.getElementById('bands');
+bd.innerHTML=bandsHTML; bd.style.gridTemplateColumns=tmpl; bd.style.width='max-content';
+
+// ---- EXPORT SVG A ESCALA REAL 1:1 (1 unidad = 1 cm) ----
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const SVGFF={barlow:'Barlow Condensed',oswald:'Oswald',anton:'Anton',monts:'Montserrat'};
+const SVGFW={barlow:900,oswald:700,anton:400,monts:600};
+function panelSVG(p){
+  const W=p.ancho, H=p.alto;
+  const fill = p.tipo==='verde'?'#1B4332': p.tipo==='crema'?'#F3EAD7': p.tipo==='door'?'#E7F1EB':'#EEF6F1';
+  const txt  = p.tipo==='verde'?'#FFFFFF':'#1F4A36';
+  const transparent = (p.tipo==='glass'||p.tipo==='door');
+  let lines=[];
+  p.elements.forEach(e=>{ if(e.role==='qr') lines.push({qr:true,cm:e.cm}); else e.lines.forEach(l=>lines.push({text:l,cm:e.cm,font:e.font})); });
+  const lh=l=> l.qr? l.cm*1.08 : l.cm*1.34;
+  const totalH=lines.reduce((s,l)=>s+lh(l),0);
+  let y=Math.max(4,(H-totalH)/2), body='';
+  lines.forEach(l=>{
+    if(l.qr){ const s=Math.min(l.cm,W-12), qx=(W-s)/2;
+      body+=`<rect x="${qx.toFixed(1)}" y="${y.toFixed(1)}" width="${s}" height="${s}" fill="#fff" stroke="#111" stroke-width="0.4"/>`
+          +`<text x="${(W/2).toFixed(1)}" y="${(y+s/2).toFixed(1)}" font-family="Oswald" font-weight="700" font-size="7" fill="#111" text-anchor="middle" dominant-baseline="central">QR</text>`;
+      y+=lh(l); return; }
+    const fs=(l.cm/0.72).toFixed(2);
+    body+=`<text x="${(W/2).toFixed(1)}" y="${(y+l.cm).toFixed(2)}" font-family="${SVGFF[l.font]}" font-weight="${SVGFW[l.font]}" font-size="${fs}" fill="${txt}" text-anchor="middle">${esc(l.text)}</text>`;
+    y+=lh(l);
+  });
+  const border = transparent ? `stroke="#7BA892" stroke-width="0.6" stroke-dasharray="2.5 2"` : `stroke="#00000022" stroke-width="0.3"`;
+  return `<rect x="0" y="0" width="${W}" height="${H}" fill="${fill}" ${border}/>${body}`
+       + `<text x="${(W/2).toFixed(1)}" y="${(H-2.2).toFixed(1)}" font-family="Montserrat" font-weight="500" font-size="3.4" fill="#9aa49d" text-anchor="middle">${esc(p.id)} · ${W}×${H}cm</text>`;
+}
+function buildSVG(){
+  const cols=6, gap=12, labelH=6;
+  const cellW=Math.max(...PANOS.map(p=>p.ancho))+gap;          // ~131 cm
+  const cellH=Math.max(...PANOS.map(p=>p.alto))+gap+labelH;    // ~208 cm
+  const rows=Math.ceil(ordered.length*2/cols);
+  // recorrido: por columna, arriba y abajo consecutivos
+  const seq=[]; ordered.forEach(c=>{ seq.push(PANOS.find(p=>p.col===c&&p.pos==='ARRIBA')); seq.push(PANOS.find(p=>p.col===c&&p.pos==='ABAJO')); });
+  const Wtot=cols*cellW, Htot=rows*cellH+labelH;
+  let g='';
+  seq.forEach((p,i)=>{ const cx=(i%cols)*cellW, cy=labelH+Math.floor(i/cols)*cellH;
+    g+=`<g transform="translate(${cx.toFixed(1)},${cy.toFixed(1)})">${panelSVG(p)}</g>`; });
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${Wtot}cm" height="${Htot}cm" viewBox="0 0 ${Wtot} ${Htot}">
+<style>text{paint-order:stroke}</style>
+<rect x="0" y="0" width="${Wtot}" height="${Htot}" fill="#ffffff"/>
+<text x="2" y="4" font-family="Montserrat" font-weight="700" font-size="3.6" fill="#1F4A36">VIDRIERA CAPRI — 24 paños a escala real 1:1 (1 unidad = 1 cm). Tipografías a curvas antes de imprenta. Verde #1B4332 · Crema #F3EAD7 · letras blancas.</text>
+${g}
+</svg>`;
+}
+function downloadSVG(){
+  const blob=new Blob([buildSVG()],{type:'image/svg+xml'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='vidriera-capri-escala-real.svg'; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
+}
 
 // counter
 const qr=PANOS.filter(p=>p.hasQR).length;
